@@ -1,0 +1,8 @@
+<context id="ShippingTraffic" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="http://repast.org/scenario/context">
+
+	<projection id="Simple_Grid" type="grid" />
+	<projection id="Continuous_Space" type="continuous space" />
+	<projection id="Water_Field" type="value layer" />
+
+</context>

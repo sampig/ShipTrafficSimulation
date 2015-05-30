@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<parameters>
+
+	<!-- Parameters for simulation -->
+	<parameter name="runLength" displayName="Run Length" type="double"
+		defaultValue="400.0" isReadOnly="false"
+		converter="repast.simphony.parameter.StringConverterFactory$DoubleConverter" />
+	<parameter name="randomSeed" displayName="Default Random Seed"
+		type="int" defaultValue="__NULL__" isReadOnly="false"
+		converter="repast.simphony.parameter.StringConverterFactory$IntConverter" />
+
+	<!-- Examples -->
+	<parameter name="simulationKind" displayName="Kind of Simulation"
+		type="int" defaultValue="10" isReadOnly="false"
+		converter="repast.simphony.parameter.StringConverterFactory$IntConverter" />
+
+	<!-- Probability for the weather change -->
+	<parameter name="probabilityWSunny" displayName="probability weather(sunny)"
+		type="double" defaultValue="1.0" isReadOnly="false"
+		converter="repast.simphony.parameter.StringConverterFactory$DoubleConverter" />
+	<parameter name="probabilityWCloudy" displayName="probability weather(cloudy)"
+		type="double" defaultValue="1.0" isReadOnly="false"
+		converter="repast.simphony.parameter.StringConverterFactory$DoubleConverter" />
+	<parameter name="probabilityWRainy" displayName="probability weather(rainy)"
+		type="double" defaultValue="1.0" isReadOnly="false"
+		converter="repast.simphony.parameter.StringConverterFactory$DoubleConverter" />
+	<parameter name="probabilityWSnowy" displayName="probability weather(snowy)"
+		type="double" defaultValue="1.0" isReadOnly="false"
+		converter="repast.simphony.parameter.StringConverterFactory$DoubleConverter" />
+
+	<!-- Probability for the obstacle appear -->
+	<parameter name="probabilityObstacle" displayName="probability obstacle (%)"
+		type="double" defaultValue="0" isReadOnly="false"
+		converter="repast.simphony.parameter.StringConverterFactory$DoubleConverter" />
+
+	<!-- Initial number of Ship -->
+	<parameter name="initNumShip" displayName="Initial Number of Ships"
+		type="int" defaultValue="2" isReadOnly="false"
+		converter="repast.simphony.parameter.StringConverterFactory$IntConverter" />
+
+</parameters>

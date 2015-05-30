@@ -1,0 +1,19 @@
+<simphony.settings.SettingsRegistry serialization="custom">
+  <unserializable-parents/>
+  <hashtable>
+    <default>
+      <loadFactor>0.75</loadFactor>
+      <threshold>3</threshold>
+    </default>
+    <int>5</int>
+    <int>4</int>
+    <string>RStudio.licenseAccepted</string>
+    <boolean>true</boolean>
+    <string>SettingsFileName</string>
+    <string>Repast.settings</string>
+    <string>SettingsRegistryId</string>
+    <string>Repast.registry</string>
+    <string>LastLoadedScenario</string>
+    <string>F:\workspace\Simulation\Repast\ShippingTraffic\ShippingTraffic.rs</string>
+  </hashtable>
+</simphony.settings.SettingsRegistry>

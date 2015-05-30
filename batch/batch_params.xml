@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<sweep runs="4">
+
+	<parameter name="initNumShip" type="constant"
+		constant_type="number" value="2" />
+
+	<parameter name="runLength" type="constant" constant_type="number"
+		value="400.01" />
+</sweep>
