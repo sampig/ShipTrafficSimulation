@@ -12,10 +12,12 @@ import repast.simphony.parameter.Parameters;
 import repast.simphony.space.continuous.ContinuousSpace;
 import repast.simphony.space.grid.Grid;
 import repast.simphony.util.ContextUtils;
+import shippingTraffic.util.GridNode;
 import shippingTraffic.util.MapCreator;
 import shippingTraffic.util.MathUtil;
 import shippingTraffic.util.ShipCreator;
 import shippingTraffic.util.SimulationKind;
+import shippingTraffic.util.TypeShip;
 import shippingTraffic.util.Weather;
 import shippingTraffic.util.WeatherController;
 
@@ -51,6 +53,10 @@ public class CentralServer extends SimpleAgent {
 	// Graphical attributes:
 	public final static int SIZE = 10;
 	private int changeStepNum = 10;
+	private int initNumShip = 0;
+	private int maxNumShip = 0;
+
+	private int delayCreation = 0; // after steps, ships are recreated.
 
 	@SuppressWarnings("unchecked")
 	public CentralServer(Context<SimpleAgent> context) {
@@ -64,55 +70,52 @@ public class CentralServer extends SimpleAgent {
 		// The editable environment parameters in the GUI.
 		Parameters p = RunEnvironment.getInstance().getParameters();
 		simulationKind = (Integer) p.getValue("simulationKind");
+		initNumShip = (Integer) p.getValue("initNumShip");
+		maxNumShip = p.getInteger("shipMaxNum");
 	}
 
 	/**
-	 * Start the simulation.
+	 * Start the simulation. Prepare for the simulation.
 	 */
 	public void startSimulation() {
 		switch (simulationKind) {
 		case SimulationKind.SIMPLE_COLLISION:
-			this.simpleCollisionSim();
-			break;
 		case SimulationKind.SIMPLE_COLLISION_2:
-			this.simpleCollisionSim2();
+			this.preSimpleCollisionSim();
+			maxNumShip = 2;
 			break;
 		case SimulationKind.AVOIDANCE_COLLISION:
-			this.avoidanceCollisionSim();
+			this.preAvoidanceCollisionSim();
 			break;
 		case SimulationKind.HITTING_LANDS:
-			this.oceanSim();
+			this.preOceanSim();
 			break;
 		case SimulationKind.OCEAN_TO_RIVER_2:
-			this.oceanSim(1);
+			this.preOceanSim(1);
 			break;
 		case SimulationKind.OCEAN_TO_RIVER_3:
-			this.oceanSim(2);
+			this.preOceanSim(2);
 			break;
 		default:
 			break;
 		}
+		this.printSimulationEnv();
 	}
 
 	/**
 	 * Simple Collision Simulation.
 	 */
-	public void simpleCollisionSim() {
+	public void preSimpleCollisionSim() {
 		mapCreator.createSimpleStraightRiver();
-		shipCreator.createTwoShips();
+		mapCreator.setStartNodesCollision();
+		shipCreator.createShips(2, mapCreator.getStartNodes());
 		weatherController.init();
-	}
-
-	public void simpleCollisionSim2() {
-		mapCreator.createSimpleStraightRiver();
-		mapCreator.resetStartNodes(simulationKind);
-		shipCreator.createTwoRandomShips();
 	}
 
 	/**
 	 * Avoidance of Collision Simulation.
 	 */
-	public void avoidanceCollisionSim() {
+	public void preAvoidanceCollisionSim() {
 		mapCreator.createSimpleStraightRiver();
 		shipCreator.createTwoShips();
 		weatherController.init();
@@ -121,15 +124,13 @@ public class CentralServer extends SimpleAgent {
 	/**
 	 * Running in the Ocean.
 	 */
-	public void oceanSim() {
+	public void preOceanSim() {
 		mapCreator.createOcean();
 		// Get the parameters p and then specify the initial numbers of ships.
-		Parameters p = RunEnvironment.getInstance().getParameters();
-		int numShips = (Integer) p.getValue("initNumShip");
-		shipCreator.createShips(numShips, mapCreator.getStartNodes());
+		shipCreator.createShips(initNumShip, mapCreator.getStartNodes());
 	}
 
-	public void oceanSim(int type) {
+	public void preOceanSim(int type) {
 		mapCreator.createOcean();
 		mapCreator.resetStartNodes(simulationKind);
 		shipCreator.createShips(2, mapCreator.getStartNodes());
@@ -152,7 +153,7 @@ public class CentralServer extends SimpleAgent {
 				this.checkLand();
 			}
 		}
-		this.collision();
+		this.collisionEvent();
 		Iterator<Map.Entry<String, double[]>> entries = mapShips.entrySet()
 				.iterator();
 		while (entries.hasNext()) {
@@ -175,18 +176,35 @@ public class CentralServer extends SimpleAgent {
 				}
 			}
 		}
-		// mooring
-		// this.moor();
+		// when delayCreation is not 0, after steps, ships would be recreated.
+		if (delayCreation > 0) {
+			if (delayCreation == 1) {
+				int num = maxNumShip - listShips.size();
+				shipCreator.createShips(num, mapCreator.getStartNodes());
+				for (GridNode node : shipCreator.getList()) {
+					Ship ship = new Ship(this.context, node.getX(),
+							node.getY(), node.getDirection(),
+							TypeShip.getRandomInstance());
+					this.context.add(ship);
+					getListShips().add(ship);
+				}
+			}
+			delayCreation--;
+		}
 	}
 
 	/**
 	 * Collision happens.
 	 */
-	public void collision() {
+	public void collisionEvent() {
 		for (int i = 0; i < listShips.size(); i++) {
 			Ship s1 = listShips.get(i);
 			for (int j = i + 1; j < listShips.size(); j++) {
 				Ship s2 = listShips.get(j);
+				if (s1.getPreviousPosition().getX() == 0
+						&& s1.getPreviousPosition().getY() == 0) {
+					continue;
+				}
 				double d = MathUtil.calDistance(s1.getPosition(),
 						s2.getPosition());
 				// if two ships move far away from each other, no collision
@@ -195,12 +213,19 @@ public class CentralServer extends SimpleAgent {
 					continue;
 				}
 				double size = (s1.getSize() + s2.getSize()) / 2;
+				if (this.simulationKind == SimulationKind.SIMPLE_COLLISION) {
+					size = 0.0001;
+				}
 				if (MathUtil.calIntersection(s1.getPreviousPosition(),
 						s1.getPosition(), s2.getPreviousPosition(),
 						s2.getPosition(), size)) {
 					s1.collision(s2);
 					listShips.remove(s1);
 					listShips.remove(s2);
+					System.out.println("Current number: " + listShips.size());
+					if (listShips.size() < this.maxNumShip) {
+						delayCreation = 5;
+					}
 				}
 			}
 		}
@@ -345,6 +370,22 @@ public class CentralServer extends SimpleAgent {
 				s.moor();
 			}
 		}
+	}
+
+	/**
+	 * Output the simulation environment.
+	 */
+	public void printSimulationEnv() {
+		StringBuffer sb = new StringBuffer();
+		sb.append("Simulation Parameters: {\n");
+		sb.append("\tSimulation Kind: "
+				+ SimulationKind.getSimulationName(simulationKind) + "\n");
+		sb.append("\tInitial Number: " + this.initNumShip + "\n");
+		sb.append("\tMax Number: " + this.maxNumShip + "\n");
+		sb.append("\tStart Nodes: " + mapCreator.getStartNodes().toString()
+				+ "\n");
+		sb.append("}\n");
+		System.out.println(sb.toString());
 	}
 
 	public List<Ship> getListShips() {

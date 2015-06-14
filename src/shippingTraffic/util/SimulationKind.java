@@ -22,7 +22,7 @@ public class SimulationKind {
 	 * The simulation for collision avoidance.
 	 */
 	public final static int AVOIDANCE_COLLISION = 10;
-	
+
 	/**
 	 * The simulation for hit the lands.
 	 */
@@ -32,7 +32,7 @@ public class SimulationKind {
 	 * Ships move parallelly from ocean into river.
 	 */
 	public final static int OCEAN_TO_RIVER_2 = 40;
-	
+
 	/**
 	 * Ships start with ramdom directions from ocean to river.
 	 */
@@ -51,6 +51,22 @@ public class SimulationKind {
 			return true;
 		}
 		return false;
+	}
+
+	public static String getSimulationName(int kind) {
+		String str = "";
+		switch (kind) {
+		case SIMPLE_COLLISION:
+			str = "Simple Collision";
+			break;
+		case SIMPLE_COLLISION_2:
+			str = "Simple Collision 2";
+			break;
+		case AVOIDANCE_COLLISION:
+			str = "Avoidance Collision";
+			break;
+		}
+		return str;
 	}
 
 }

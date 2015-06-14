@@ -69,6 +69,7 @@ public class ShipCreator {
 	 */
 	public void createShips(int num, List<GridNode> starts) {
 		Random r = new Random();
+		list.clear();
 		for (int i = 0; i < num; i++) {
 			// GridNode node = new GridNode(0, r.nextInt(10));
 			GridNode node = starts.get(r.nextInt(starts.size()));

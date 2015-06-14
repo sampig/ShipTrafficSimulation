@@ -1,7 +1,7 @@
 Ship Traffic Simulation
 ===================
 
-&copy;Author: <a href="http://about.me/zhuchenfeng">ZHU, Chenfeng</a>
+&copy;Author: [ZHU, Chenfeng](http://about.me/zhuchenfeng)
 
 This is a Ship Traffic Simulation program developed with Repast Simphony.
 

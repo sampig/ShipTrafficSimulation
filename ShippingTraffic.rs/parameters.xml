@@ -15,27 +15,30 @@
 		converter="repast.simphony.parameter.StringConverterFactory$IntConverter" />
 
 	<!-- Probability for the weather change -->
-	<parameter name="probabilityWSunny" displayName="probability weather(sunny)"
+	<parameter name="probabilityWSunny" displayName="Weather Probability(sunny)"
 		type="double" defaultValue="1.0" isReadOnly="false"
 		converter="repast.simphony.parameter.StringConverterFactory$DoubleConverter" />
-	<parameter name="probabilityWCloudy" displayName="probability weather(cloudy)"
+	<parameter name="probabilityWCloudy" displayName="Weather Probability(cloudy)"
 		type="double" defaultValue="1.0" isReadOnly="false"
 		converter="repast.simphony.parameter.StringConverterFactory$DoubleConverter" />
-	<parameter name="probabilityWRainy" displayName="probability weather(rainy)"
+	<parameter name="probabilityWRainy" displayName="Weather Probability(rainy)"
 		type="double" defaultValue="1.0" isReadOnly="false"
 		converter="repast.simphony.parameter.StringConverterFactory$DoubleConverter" />
-	<parameter name="probabilityWSnowy" displayName="probability weather(snowy)"
+	<parameter name="probabilityWSnowy" displayName="Weather Probability(snowy)"
 		type="double" defaultValue="1.0" isReadOnly="false"
 		converter="repast.simphony.parameter.StringConverterFactory$DoubleConverter" />
 
 	<!-- Probability for the obstacle appear -->
-	<parameter name="probabilityObstacle" displayName="probability obstacle (%)"
+	<parameter name="probabilityObstacle" displayName="obstacle probability (%)"
 		type="double" defaultValue="0" isReadOnly="false"
 		converter="repast.simphony.parameter.StringConverterFactory$DoubleConverter" />
 
 	<!-- Initial number of Ship -->
-	<parameter name="initNumShip" displayName="Initial Number of Ships"
+	<parameter name="initNumShip" displayName="ShipsNumber: Initial Number"
 		type="int" defaultValue="2" isReadOnly="false"
+		converter="repast.simphony.parameter.StringConverterFactory$IntConverter" />
+	<parameter name="shipMaxNum" displayName="ShipsNumber: Max Number"
+		type="int" defaultValue="5" isReadOnly="false"
 		converter="repast.simphony.parameter.StringConverterFactory$IntConverter" />
 
 </parameters>

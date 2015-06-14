@@ -61,6 +61,11 @@ public class Ship extends SimpleAgent {
 		position.setX(x);
 		position.setY(y);
 		position.setDirection(d);
+	}
+
+	public Ship(Context<SimpleAgent> context, int x, int y, int d, TypeShip type) {
+		this(context, x, y, d);
+		this.setType(type);
 		System.out.println("Create a " + this.toString() + ".");
 	}
 

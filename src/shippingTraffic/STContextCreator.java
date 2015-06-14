@@ -85,6 +85,8 @@ public class STContextCreator implements ContextBuilder<SimpleAgent> {
 		// The editable environment parameters in the GUI.
 		Parameters p = RunEnvironment.getInstance().getParameters();
 
+		// int simulationKind = p.getInteger("simulationKind");
+
 		// Create the central Server.
 		CentralServer server = new CentralServer(context);
 		System.out.println("Start server: " + server.toString());
@@ -95,8 +97,7 @@ public class STContextCreator implements ContextBuilder<SimpleAgent> {
 		ShipCreator ships = server.getShipCreator();
 		for (GridNode node : ships.getList()) {
 			Ship ship = new Ship(context, node.getX(), node.getY(),
-					node.getDirection());
-			ship.setType(TypeShip.getRandomInstance());
+					node.getDirection(), TypeShip.getRandomInstance());
 			// ship.setHeading(node.getDirection());
 			context.add(ship); // add the new ship to the root context
 			server.getListShips().add(ship);

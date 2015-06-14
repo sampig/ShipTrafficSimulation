@@ -113,14 +113,7 @@ public class MapCreator {
 		Random r = new Random();
 		this.clearStartNodes();
 		if (type == SimulationKind.SIMPLE_COLLISION_2) {
-			GridNode node = new GridNode(1, SIZE_Y / 2 + 1, 0);
-			startNodes.add(node);
-			node = new GridNode(SIZE_X - 1, SIZE_Y / 2 + 1, 180);
-			startNodes.add(node);
-			node = new GridNode(1, SIZE_Y / 2 - 1, 0);
-			startNodes.add(node);
-			node = new GridNode(SIZE_X - 1, SIZE_Y / 2 - 1, 180);
-			startNodes.add(node);
+			this.setStartNodesCollision();
 		} else if (type == SimulationKind.OCEAN_TO_RIVER_2) {
 			this.addStartNode(new GridNode(1, 25, 0));
 			this.addStartNode(new GridNode(1, 150, 0));
@@ -128,6 +121,18 @@ public class MapCreator {
 			this.addStartNode(new GridNode(1, 25, r.nextInt(45))); // 0~45
 			this.addStartNode(new GridNode(1, 150, 0 - r.nextInt(45))); // -45~0
 		}
+	}
+	
+	public void setStartNodesCollision() {
+		this.clearStartNodes();
+		GridNode node = new GridNode(2, SIZE_Y / 2 + 1, 0);
+		startNodes.add(node);
+		node = new GridNode(SIZE_X - 2, SIZE_Y / 2 + 1, 180);
+		startNodes.add(node);
+		node = new GridNode(2, SIZE_Y / 2 - 1, 0);
+		startNodes.add(node);
+		node = new GridNode(SIZE_X - 2, SIZE_Y / 2 - 1, 180);
+		startNodes.add(node);
 	}
 
 	public List<GridNode> getWater() {
