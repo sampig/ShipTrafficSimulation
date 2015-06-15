@@ -65,6 +65,17 @@ public class SimulationKind {
 		case AVOIDANCE_COLLISION:
 			str = "Avoidance Collision";
 			break;
+		case HITTING_LANDS:
+			str = "Hitting Lands";
+			break;
+		case OCEAN_TO_RIVER_2:
+			str = "Simple into River";
+			break;
+		case OCEAN_TO_RIVER_3:
+			str = "Advanced into River";
+			break;
+		default:
+			break;
 		}
 		return str;
 	}

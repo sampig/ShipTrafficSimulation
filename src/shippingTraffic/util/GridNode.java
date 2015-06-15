@@ -87,4 +87,9 @@ public class GridNode {
 		return str;
 	}
 
+	public String toShortString() {
+		String str = "(" + x + ", " + y + ")";
+		return str;
+	}
+
 }

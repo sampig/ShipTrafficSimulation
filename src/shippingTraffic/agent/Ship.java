@@ -1,5 +1,7 @@
 package shippingTraffic.agent;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import repast.simphony.annotate.AgentAnnot;
@@ -24,6 +26,7 @@ public class Ship extends SimpleAgent {
 
 	private String ID = UUID.randomUUID().toString();
 
+	private Context<SimpleAgent> context;
 	private ContinuousSpace<Object> space;
 	private Grid<Object> grid;
 
@@ -34,6 +37,15 @@ public class Ship extends SimpleAgent {
 	private GridNode position = new GridNode();
 	private GridNode previousPos = new GridNode();
 	private GridNode nextPos = new GridNode();
+
+	//
+	private List<int[]> changeCount = new ArrayList<>(0);
+	public final static int CHANGE_COUNT = 10;
+	private List<double[]> changeDirection = new ArrayList<>(0);
+	private List<String> listID = new ArrayList<>(0);
+
+	//
+	private CentralServer server;
 
 	public Ship() {
 		this.setHeading(0);
@@ -51,6 +63,7 @@ public class Ship extends SimpleAgent {
 
 	@SuppressWarnings("unchecked")
 	public Ship(Context<SimpleAgent> context, int x, int y, int d) {
+		this.context = context;
 		context.add(this);
 		Grid<Object> grid = (Grid<Object>) context.getProjection("Simple_Grid");
 		ContinuousSpace<Object> space = (ContinuousSpace<Object>) context
@@ -61,12 +74,18 @@ public class Ship extends SimpleAgent {
 		position.setX(x);
 		position.setY(y);
 		position.setDirection(d);
+		init();
 	}
 
 	public Ship(Context<SimpleAgent> context, int x, int y, int d, TypeShip type) {
 		this(context, x, y, d);
 		this.setType(type);
 		System.out.println("Create a " + this.toString() + ".");
+	}
+
+	public void init() {
+		server = (CentralServer) this.context.getObjects(CentralServer.class)
+				.iterator().next();
 	}
 
 	@SuppressWarnings("rawtypes")
@@ -108,10 +127,41 @@ public class Ship extends SimpleAgent {
 		if (water == null || !water.isAvailable()) {
 			// System.out.println(water+","+water.isAvailable());
 			System.out.println("I(" + this.getID() + ") hit something.");
-			this.destroyed();
+			this.hit(x, y);
 		}
 		if (anotherShip != null) {
 			// this.collision(anotherShip);
+		}
+
+		//
+		if (changeCount.size() > 0) {
+			for (int i = 0; i < changeCount.size(); i++) {
+				int[] cc = changeCount.get(i);
+				double[] cd = changeDirection.get(i);
+				if (cc.length < 3) {
+					continue;
+				}
+				if (cc[0] > 0) {
+					if (cc[0] == 1) {
+						this.changeDirection(cd[0]);
+					}
+					cc[0]--;
+				} else if (cc[1] > 0) {
+					if (cc[1] == 1) {
+						this.changeDirection(cd[1]);
+					}
+					cc[1]--;
+				} else if (cc[2] > 0) {
+					if (cc[2] == 1) {
+						this.changeDirection(cd[2]);
+					}
+					cc[2]--;
+				} else {
+					changeCount.remove(cc);
+					changeDirection.remove(cd);
+					listID.remove(i);
+				}
+			}
 		}
 	}
 
@@ -149,7 +199,7 @@ public class Ship extends SimpleAgent {
 		}
 		if (water == null || !water.isAvailable()) {
 			System.out.println("I(" + this.getID() + ") hit something.");
-			this.destroyed();
+			this.hit(x, y);
 		}
 		if (anotherShip != null) {
 			this.collision(anotherShip);
@@ -163,6 +213,14 @@ public class Ship extends SimpleAgent {
 		this.destroyed();
 	}
 
+	public void hit(int x, int y) {
+		Obstacle obs = new Obstacle(this.context, x, y);
+		this.context.add(obs);
+		// send messages to server
+		this.sendMsgHit(obs);
+		this.destroyed();
+	}
+
 	/**
 	 * Ship moors at the harbor.
 	 */
@@ -173,6 +231,40 @@ public class Ship extends SimpleAgent {
 
 	public void destroyed() {
 		super.end();
+	}
+
+	/**
+	 * 
+	 * Change ship's Direction by angle
+	 * 
+	 * @param direction
+	 *            changed angle (degree)
+	 * @param anotherID
+	 *            ID of another ship
+	 */
+	public void changeDirection(double direction, Ship another) {
+		if (listID.contains(another.getID())) {
+			return;
+		}
+		int m = 1;
+		int m2 = 1;
+		if (this.getType().getMaxSpeed() < 2) {
+			m = 4;
+		}
+		double angle = Math.abs(this.getHeading() - another.getHeading());
+		if (angle < 90 || angle > 270) {
+			if (this.getSpeed() == another.getSpeed()) {
+				m2 = 8;
+			} else {
+				m2 = 4 / (int) Math.abs(this.getSpeed() - another.getSpeed());
+			}
+		}
+		int[] cc = { CHANGE_COUNT * m, CHANGE_COUNT * m2, CHANGE_COUNT * m };
+		changeCount.add(cc);
+		double[] cd = { -direction, -direction, direction };
+		changeDirection.add(cd);
+		listID.add(another.getID());
+		this.changeDirection(direction);
 	}
 
 	/**
@@ -227,7 +319,7 @@ public class Ship extends SimpleAgent {
 
 	public double getSpeed() {
 		if (super.getSpeed() == 0) {
-			return type.getMaxSpeed() / 2;
+			return type.getMaxSpeed();
 		}
 		return super.getSpeed();
 	}
@@ -250,6 +342,10 @@ public class Ship extends SimpleAgent {
 		return this.nextPos;
 	}
 
+	public List<String> getListID() {
+		return listID;
+	}
+
 	public String toString() {
 		String str = "Ship-" + this.getType().getTypeName();
 		str += "(" + this.getID() + "): "; // id
@@ -268,6 +364,22 @@ public class Ship extends SimpleAgent {
 
 	public void setStatus(int status) {
 		this.status = status;
+	}
+
+	/**
+	 * Send message about hitting to server.
+	 */
+	public void sendMsgHit(Obstacle obs) {
+		server.getListObs().add(obs);
+		server.getListShips().remove(this);
+		System.out.println("Current number: " + server.getListShips().size());
+	}
+
+	/**
+	 * Send message about collision to server.
+	 */
+	public void sendMsgCollision() {
+		;
 	}
 
 }

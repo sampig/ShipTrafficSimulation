@@ -39,7 +39,47 @@ public class MathUtil {
 	 */
 	public static double calDistanceAdv(GridNode n1, GridNode n2) {
 		double d = 0;
+		d = Math.sqrt((n1.getX() - n2.getX()) * (n1.getX() - n2.getX())
+				+ (n1.getY() - n2.getY()) * (n1.getY() - n2.getY()));
+		if (Math.abs(n1.getDirection() - n2.getDirection()) >= 90) {
+			;
+		}
 		return d;
+	}
+
+	/**
+	 * 
+	 * @param n1
+	 *            previous point of ship1
+	 * @param n2
+	 *            current point of ship1
+	 * @param n3
+	 *            previous point of ship2
+	 * @param n4
+	 *            current point of ship2
+	 * @return
+	 */
+	public static boolean checkSafeDistance(GridNode n1, GridNode n2,
+			GridNode n3, GridNode n4) {
+		if (n1 == null || n2 == null || n3 == null | n4 == null) {
+			return true;
+		}
+		int x1 = n1.getX();
+		int y1 = n1.getY();
+		int x2 = n2.getX();
+		int y2 = n2.getY();
+		int x3 = n3.getX();
+		int y3 = n3.getY();
+		int x4 = n4.getX();
+		int y4 = n4.getY();
+		// previous distance
+		double l13 = Math.sqrt((x3 - x1) * (x3 - x1) + (y3 - y1) * (y3 - y1));
+		// current distance
+		double l24 = Math.sqrt((x4 - x2) * (x4 - x2) + (y4 - y2) * (y4 - y2));
+		if (l24 > l13) {
+			return true;
+		}
+		return false;
 	}
 
 	/**
@@ -146,6 +186,27 @@ public class MathUtil {
 		double l23 = Math.sqrt((x3 - x2) * (x3 - x2) + (y3 - y2) * (y3 - y2));
 		double diff = Math.abs(l23 - (l12 + l13));
 		if (diff < 0.001) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Compare the direction of Ship1 and the direction for Ship2 to Ship1.
+	 * Decide that Ship1 should turn left or right.
+	 * 
+	 * @param n1
+	 *            Position of Ship1
+	 * @param n2
+	 *            Position of Ship2
+	 * @return false(left) true(right)
+	 * 
+	 */
+	public static boolean chooseDirection(GridNode n1, GridNode n2) {
+		int d = n1.getDirection();
+		double d2 = Math.toDegrees(Math.atan2((n2.getY() - n1.getY())
+				, (n2.getX() - n1.getX())));
+		if(d2>d) {
 			return true;
 		}
 		return false;

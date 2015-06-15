@@ -39,7 +39,7 @@ public class TypeShip {
 	private double size = 0; // size of ship
 	private double max_speed = 0; // max speed of ship
 	private double max_turn = 45; // the max angle ship could turn
-	private double safe_distance = 15; // safe distance of ship
+	private double safe_distance = 25; // safe distance of ship
 	private double warning_distance = 5; //
 
 	public TypeShip(int type) {
@@ -77,7 +77,7 @@ public class TypeShip {
 			size = 10;
 			max_speed = 1;
 			max_turn = 30;
-			safe_distance *= 1;
+			safe_distance *= 1.3;
 			break;
 		default:
 			break;

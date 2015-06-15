@@ -2,7 +2,6 @@ package shippingTraffic.agent;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -52,11 +51,12 @@ public class CentralServer extends SimpleAgent {
 
 	// Graphical attributes:
 	public final static int SIZE = 10;
-	private int changeStepNum = 10;
+	// private int changeStepNum = 10;
 	private int initNumShip = 0;
 	private int maxNumShip = 0;
 
 	private int delayCreation = 0; // after steps, ships are recreated.
+	public final static int DELAY_CREATION = 10;
 
 	@SuppressWarnings("unchecked")
 	public CentralServer(Context<SimpleAgent> context) {
@@ -126,6 +126,7 @@ public class CentralServer extends SimpleAgent {
 	 */
 	public void preOceanSim() {
 		mapCreator.createOcean();
+		mapCreator.setTestStartNodes();
 		// Get the parameters p and then specify the initial numbers of ships.
 		shipCreator.createShips(initNumShip, mapCreator.getStartNodes());
 	}
@@ -147,35 +148,23 @@ public class CentralServer extends SimpleAgent {
 		}
 		// only if it is the simple collision simulation, server will not check
 		// the collision.
-		if (!SimulationKind.isCollision(simulationKind)) {
+		switch (simulationKind) {
+		case SimulationKind.OCEAN_TO_RIVER_2:
+		case SimulationKind.OCEAN_TO_RIVER_3:
+			this.checkLand();
+		case SimulationKind.AVOIDANCE_COLLISION:
+		case SimulationKind.HITTING_LANDS:
 			this.checkCollision();
-			if (simulationKind != SimulationKind.HITTING_LANDS) {
-				this.checkLand();
-			}
+		case SimulationKind.SIMPLE_COLLISION:
+		case SimulationKind.SIMPLE_COLLISION_2:
+		default:
+			this.collisionEvent();
 		}
-		this.collisionEvent();
-		Iterator<Map.Entry<String, double[]>> entries = mapShips.entrySet()
-				.iterator();
-		while (entries.hasNext()) {
-			Map.Entry<String, double[]> entry = entries.next();
-			String key = (String) entry.getKey();
-			double[] value = entry.getValue();
-			if (value == null || Math.abs(value[1] + this.changeStepNum) < 1) {
-				// resume the original status
-				this.resumeDirection(key, value[0]);
-				entries.remove();
-			} else {
-				entry.setValue(new double[] { value[0], value[1] - 1, value[2] });
-				if (value[1] > 0) {
-					; // this.changeDirection(key, value[2]);
-				} else if (value[1] < 1 && value[1] > -1) {
-					this.resumeDirection(key, value[0]);
-					this.changeDirection(key, -value[2]);
-				} else if (value[1] < 0) {
-					;
-				}
-			}
-		}
+
+		// check the status of the whole map.
+		this.checkShips();
+		this.checkObstacles();
+
 		// when delayCreation is not 0, after steps, ships would be recreated.
 		if (delayCreation > 0) {
 			if (delayCreation == 1) {
@@ -219,14 +208,46 @@ public class CentralServer extends SimpleAgent {
 				if (MathUtil.calIntersection(s1.getPreviousPosition(),
 						s1.getPosition(), s2.getPreviousPosition(),
 						s2.getPosition(), size)) {
+					// collision happens.
 					s1.collision(s2);
+					// remove the ships from the list.
 					listShips.remove(s1);
 					listShips.remove(s2);
 					System.out.println("Current number: " + listShips.size());
+					// add obstacle into the list.
+					int x = (s1.getPosition().getX() + s2.getPosition().getX()) / 2;
+					int y = (s1.getPosition().getY() + s2.getPosition().getY()) / 2;
+					obstacleAppear(x, y);
+					// if ships are not enough, prepare to create new ones.
 					if (listShips.size() < this.maxNumShip) {
-						delayCreation = 5;
+						delayCreation = DELAY_CREATION;
 					}
 				}
+			}
+		}
+	}
+
+	public void checkShips() {
+		for (Ship ship : listShips) {
+			if (ship == null) {
+				listShips.remove(ship);
+			}
+			if (listShips.size() < this.maxNumShip) {
+				delayCreation = DELAY_CREATION;
+			}
+		}
+	}
+
+	public void obstacleAppear(int x, int y) {
+		Obstacle obs = new Obstacle(this.context, x, y);
+		this.context.add(obs);
+		getListObs().add(obs);
+	}
+
+	public void checkObstacles() {
+		for (Obstacle obs : listObs) {
+			if (obs == null) {
+				listObs.remove(obs);
 			}
 		}
 	}
@@ -239,11 +260,19 @@ public class CentralServer extends SimpleAgent {
 			Ship s1 = listShips.get(i);
 			for (int j = i + 1; j < listShips.size(); j++) {
 				Ship s2 = listShips.get(j);
+				if (s1.getListID().contains(s2.getID())
+						|| s2.getListID().contains(s1.getID())) {
+					continue;
+				}
 				double d = MathUtil.calDistance(s1.getPosition(),
 						s2.getPosition());
 				if (d < s1.getSafeDistance() + s2.getSafeDistance()) {
-					// if (d < s1.getSafeDistance() || d < s2.getSafeDistance())
-					// {
+					// if two ships move away from each other, it is safe.
+					if (MathUtil.checkSafeDistance(s1.getPreviousPosition(),
+							s1.getPosition(), s2.getPreviousPosition(),
+							s2.getPosition())) {
+						continue;
+					}
 					this.changeDirection(s1, s2);
 				}
 			}
@@ -335,15 +364,23 @@ public class CentralServer extends SimpleAgent {
 		if (s1.getTotal_mass() <= s2.getTotal_mass()) {
 			if (mapShips.get(s1.getID()) == null) {
 				// save the current status of ship.
-				mapShips.put(s1.getID(), new double[] { s1.getHeading(),
-						changeStepNum, s1.getType().getMax_turn() });
-				s1.changeDirection(s1.getType().getMax_turn());
+				// mapShips.put(s1.getID(), new double[] { s1.getHeading(),
+				// changeStepNum, s1.getType().getMax_turn() });
+				double turn = s1.getType().getMax_turn();
+				if (MathUtil
+						.chooseDirection(s1.getPosition(), s2.getPosition())) {
+					turn = -turn;
+				}
+				s1.changeDirection(turn, s2);
 			}
 		} else {
 			if (mapShips.get(s2.getID()) == null) {
-				mapShips.put(s2.getID(), new double[] { s2.getHeading(),
-						changeStepNum, s2.getType().getMax_turn() });
-				s2.changeDirection(s2.getType().getMax_turn());
+				double turn = s2.getType().getMax_turn();
+				if (MathUtil
+						.chooseDirection(s2.getPosition(), s1.getPosition())) {
+					turn = -turn;
+				}
+				s2.changeDirection(turn, s1);
 			}
 		}
 	}
@@ -368,6 +405,7 @@ public class CentralServer extends SimpleAgent {
 		for (Ship s : listShips) {
 			if (s.getPosition().getX() >= mapCreator.getDestiny().getX()) {
 				s.moor();
+				listShips.remove(s);
 			}
 		}
 	}

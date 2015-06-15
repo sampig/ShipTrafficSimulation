@@ -15,6 +15,9 @@ public class MapCreator {
 	public final static int SIZE_X = 400;
 	public final static int SIZE_Y = 200;
 
+	public final static int START_PADDING_X = 2;
+	public final static int START_PADDING_Y = 2;
+
 	private List<GridNode> water = new ArrayList<>(0);
 	private List<GridNode> startNodes = new ArrayList<>(0);
 
@@ -42,9 +45,9 @@ public class MapCreator {
 			}
 		}
 		// Create start nodes.
-		node = new GridNode(1, SIZE_Y / 2);
+		node = new GridNode(START_PADDING_X, SIZE_Y / 2, 0);
 		startNodes.add(node);
-		node = new GridNode(SIZE_X - 1, SIZE_Y / 2);
+		node = new GridNode(SIZE_X - START_PADDING_X, SIZE_Y / 2, 180);
 		startNodes.add(node);
 		System.out.println("Create a simple and straight river.");
 	}
@@ -97,10 +100,10 @@ public class MapCreator {
 		}
 		// Create start nodes.
 		for (int j = SIZE_Y / 10; j < SIZE_Y * 9 / 10; j++) {
-			node = new GridNode(1, j);
+			node = new GridNode(START_PADDING_X, j);
 			startNodes.add(node);
 		}
-		//
+		// Record some key positions.
 		this.line_x = x1;
 		this.line_x2 = x2;
 		this.river_y1 = y1;
@@ -115,23 +118,32 @@ public class MapCreator {
 		if (type == SimulationKind.SIMPLE_COLLISION_2) {
 			this.setStartNodesCollision();
 		} else if (type == SimulationKind.OCEAN_TO_RIVER_2) {
-			this.addStartNode(new GridNode(1, 25, 0));
-			this.addStartNode(new GridNode(1, 150, 0));
+			this.addStartNode(new GridNode(START_PADDING_X, 25, 0));
+			this.addStartNode(new GridNode(START_PADDING_X, 150, 0));
 		} else if (type == SimulationKind.OCEAN_TO_RIVER_3) {
-			this.addStartNode(new GridNode(1, 25, r.nextInt(45))); // 0~45
-			this.addStartNode(new GridNode(1, 150, 0 - r.nextInt(45))); // -45~0
+			this.addStartNode(new GridNode(START_PADDING_X, 25, r.nextInt(45))); // 0~45
+			this.addStartNode(new GridNode(START_PADDING_X, 150, 0 - r
+					.nextInt(45))); // -45~0
 		}
 	}
-	
+
 	public void setStartNodesCollision() {
 		this.clearStartNodes();
-		GridNode node = new GridNode(2, SIZE_Y / 2 + 1, 0);
+		GridNode node = new GridNode(START_PADDING_X, SIZE_Y / 2 + 1, 0);
 		startNodes.add(node);
-		node = new GridNode(SIZE_X - 2, SIZE_Y / 2 + 1, 180);
+		node = new GridNode(SIZE_X - START_PADDING_X, SIZE_Y / 2 + 1, 180);
 		startNodes.add(node);
-		node = new GridNode(2, SIZE_Y / 2 - 1, 0);
+		node = new GridNode(START_PADDING_X, SIZE_Y / 2 - 1, 0);
 		startNodes.add(node);
-		node = new GridNode(SIZE_X - 2, SIZE_Y / 2 - 1, 180);
+		node = new GridNode(SIZE_X - START_PADDING_X, SIZE_Y / 2 - 1, 180);
+		startNodes.add(node);
+	}
+	
+	public void setTestStartNodes() {
+		this.clearStartNodes();
+		GridNode node = new GridNode(START_PADDING_X, 106, 0);
+		startNodes.add(node);
+		node = new GridNode(START_PADDING_X, 92, 0);
 		startNodes.add(node);
 	}
 

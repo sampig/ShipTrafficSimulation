@@ -11,7 +11,7 @@
 
 	<!-- Examples -->
 	<parameter name="simulationKind" displayName="Kind of Simulation"
-		type="int" defaultValue="10" isReadOnly="false"
+		type="int" defaultValue="11" isReadOnly="false"
 		converter="repast.simphony.parameter.StringConverterFactory$IntConverter" />
 
 	<!-- Probability for the weather change -->
@@ -38,7 +38,7 @@
 		type="int" defaultValue="2" isReadOnly="false"
 		converter="repast.simphony.parameter.StringConverterFactory$IntConverter" />
 	<parameter name="shipMaxNum" displayName="ShipsNumber: Max Number"
-		type="int" defaultValue="5" isReadOnly="false"
+		type="int" defaultValue="2" isReadOnly="false"
 		converter="repast.simphony.parameter.StringConverterFactory$IntConverter" />
 
 </parameters>
