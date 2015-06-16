@@ -46,6 +46,7 @@ public class Ship extends SimpleAgent {
 
 	//
 	private CentralServer server;
+	private GridNode destiny = new GridNode();
 
 	public Ship() {
 		this.setHeading(0);
@@ -225,8 +226,9 @@ public class Ship extends SimpleAgent {
 	 * Ship moors at the harbor.
 	 */
 	public void moor() {
-		this.setSpeed(0);
 		System.out.println("I(" + this.getID() + ") is moored");
+		// this.setSpeed(0);
+		this.destroyed();
 	}
 
 	public void destroyed() {
@@ -265,6 +267,15 @@ public class Ship extends SimpleAgent {
 		changeDirection.add(cd);
 		listID.add(another.getID());
 		this.changeDirection(direction);
+	}
+
+	/**
+	 * When the ship is too close to the riverside, make it
+	 */
+	public void adjustPath() {
+		if (this.getPosition().getY() > destiny.getY()) {
+			;
+		}
 	}
 
 	/**
@@ -330,6 +341,12 @@ public class Ship extends SimpleAgent {
 		return sd;
 	}
 
+	public double getLandSafeDistance() {
+		double sd = 0;
+		sd = type.getSafeDistance() / 2;
+		return sd;
+	}
+
 	public GridNode getPosition() {
 		return this.position;
 	}
@@ -364,6 +381,15 @@ public class Ship extends SimpleAgent {
 
 	public void setStatus(int status) {
 		this.status = status;
+	}
+
+	/**
+	 * CentralServer tells the Ship about the destiny.
+	 * 
+	 * @param destiny
+	 */
+	public void setDestiny(GridNode destiny) {
+		this.destiny = destiny;
 	}
 
 	/**

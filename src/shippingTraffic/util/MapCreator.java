@@ -21,7 +21,8 @@ public class MapCreator {
 	private List<GridNode> water = new ArrayList<>(0);
 	private List<GridNode> startNodes = new ArrayList<>(0);
 
-	private int line_x;
+	// these points are used in Ocean.
+	private int line_x1;
 	private int line_x2;
 	private int river_y1, river_y2;
 	private GridNode destiny = new GridNode();
@@ -104,10 +105,11 @@ public class MapCreator {
 			startNodes.add(node);
 		}
 		// Record some key positions.
-		this.line_x = x1;
+		this.line_x1 = x1;
 		this.line_x2 = x2;
 		this.river_y1 = y1;
 		this.river_y2 = y2;
+		// define the destiny.
 		this.destiny = new GridNode(SIZE_X - 10, (y1 + y2) / 2);
 		System.out.println("Create an ocean.");
 	}
@@ -138,7 +140,7 @@ public class MapCreator {
 		node = new GridNode(SIZE_X - START_PADDING_X, SIZE_Y / 2 - 1, 180);
 		startNodes.add(node);
 	}
-	
+
 	public void setTestStartNodes() {
 		this.clearStartNodes();
 		GridNode node = new GridNode(START_PADDING_X, 106, 0);
@@ -175,8 +177,8 @@ public class MapCreator {
 		this.destiny = destiny;
 	}
 
-	public int getLineX() {
-		return this.line_x;
+	public int getLineX1() {
+		return this.line_x1;
 	}
 
 	public int getLineX2() {

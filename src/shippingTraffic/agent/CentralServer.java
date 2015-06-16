@@ -2,6 +2,7 @@ package shippingTraffic.agent;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -126,7 +127,7 @@ public class CentralServer extends SimpleAgent {
 	 */
 	public void preOceanSim() {
 		mapCreator.createOcean();
-		mapCreator.setTestStartNodes();
+		// mapCreator.setTestStartNodes();
 		// Get the parameters p and then specify the initial numbers of ships.
 		shipCreator.createShips(initNumShip, mapCreator.getStartNodes());
 	}
@@ -149,12 +150,15 @@ public class CentralServer extends SimpleAgent {
 		// only if it is the simple collision simulation, server will not check
 		// the collision.
 		switch (simulationKind) {
-		case SimulationKind.OCEAN_TO_RIVER_2:
 		case SimulationKind.OCEAN_TO_RIVER_3:
+		case SimulationKind.OCEAN_TO_RIVER_2:
 			this.checkLand();
+			this.checkMoor();
 		case SimulationKind.AVOIDANCE_COLLISION:
 		case SimulationKind.HITTING_LANDS:
-			this.checkCollision();
+			if (simulationKind != SimulationKind.OCEAN_TO_RIVER_2) {
+				this.checkCollision();
+			}
 		case SimulationKind.SIMPLE_COLLISION:
 		case SimulationKind.SIMPLE_COLLISION_2:
 		default:
@@ -228,9 +232,14 @@ public class CentralServer extends SimpleAgent {
 	}
 
 	public void checkShips() {
-		for (Ship ship : listShips) {
+		if (listShips.size() == 0) {
+			return;
+		}
+		Iterator<Ship> iterator = listShips.iterator();
+		while (iterator.hasNext()) {
+			Ship ship = iterator.next();
 			if (ship == null) {
-				listShips.remove(ship);
+				iterator.remove();
 			}
 			if (listShips.size() < this.maxNumShip) {
 				delayCreation = DELAY_CREATION;
@@ -245,7 +254,12 @@ public class CentralServer extends SimpleAgent {
 	}
 
 	public void checkObstacles() {
-		for (Obstacle obs : listObs) {
+		if (listObs.size() == 0) {
+			return;
+		}
+		Iterator<Obstacle> iterator = listObs.iterator();
+		while (iterator.hasNext()) {
+			Obstacle obs = iterator.next();
 			if (obs == null) {
 				listObs.remove(obs);
 			}
@@ -280,54 +294,69 @@ public class CentralServer extends SimpleAgent {
 	}
 
 	/**
-	 * Check the land ahead.
+	 * Check the land ahead and send command to Ships to avoid hitting the land.
+	 * This is based on the fact that CentralServer knows the map and its key
+	 * points.
 	 */
 	public void checkLand() {
 		int y = mapCreator.getDestiny().getY();
-		int rx = mapCreator.getLineX();
-		int rx2 = mapCreator.getLineX2();
-		int y1 = mapCreator.getRiverY1();
-		int y2 = mapCreator.getRiverY2();
+		int lx1 = mapCreator.getLineX1();
+		int lx2 = mapCreator.getLineX2();
+		int ry1 = mapCreator.getRiverY1();
+		int ry2 = mapCreator.getRiverY2();
 		for (Ship s : listShips) {
 			double turn = s.getType().getMax_turn();
-			double sd = s.getSafeDistance();
-			if (s.getPosition().getY() < y) {
-				if (s.getPosition().getX() > rx) {
+			double sd = s.getLandSafeDistance();
+			if (s.getPosition().getY() < y) { // in the lower part
+				if (s.getPosition().getX() > lx1) {
 					continue;
 				}
-				if (s.getPosition().getY() >= y1 + sd
-						&& s.getPosition().getY() <= y2 - sd) {
+				if (s.getPosition().getY() >= ry1 + sd
+						&& s.getPosition().getY() <= ry2 - sd) {
 					s.setHeading(0);
 					continue;
 				}
-				double dx = rx - (sd + y1 - s.getPosition().getY())
+				if (s.getPosition().getY() > ry1
+						&& ((s.getHeading() + 360) % 360) < 90) {
+					continue;
+				}
+				double dx = lx1 - (sd + ry1 - s.getPosition().getY())
 						/ Math.tan(Math.toRadians(s.getHeading() + turn));
-				if (s.getPosition().getY() > y1) {
+				if (s.getPosition().getY() > ry1) {
 					continue;
 				}
 				if (s.getPosition().getX() >= dx - sd) {
 					s.changeDirection(turn);
 				}
-			} else {
-				if (s.getPosition().getX() > rx2) {
+			} else { // in the upper part
+				if (s.getPosition().getX() > lx2) {
 					continue;
 				}
-				if (s.getPosition().getY() <= y2 - sd
-						&& s.getPosition().getY() >= y1 + sd) {
+				if (s.getPosition().getY() <= ry2 - sd
+						&& s.getPosition().getY() >= ry1 + sd) {
 					s.setHeading(0);
 					continue;
 				}
-				double dx = rx2 - (s.getPosition().getY() + sd - y2)
+				if (s.getPosition().getY() < ry2
+						&& ((s.getHeading() + 360) % 360) > 270) {
+					continue;
+				}
+				double dx = lx2 - (s.getPosition().getY() + sd - ry2)
 						/ Math.tan(Math.toRadians(-s.getHeading() + turn));
 				if (s.getPosition().getX() >= dx - sd) {
 					s.changeDirection(-turn);
+					System.out.println("Turning: " + (-turn));
 				}
-				// if (!mapCreator.getWater().contains(
-				// new GridNode(s.getPosition().getX() + (int) sd, s
-				// .getPosition().getY()))) {
-				// s.changeDirection(-turn);
-				// }
 			}
+		}
+	}
+
+	/**
+	 * Tell the Ship about the destiny;
+	 */
+	public void sendShipDestiny() {
+		for (Ship s : listShips) {
+			s.setDestiny(mapCreator.getDestiny());
 		}
 	}
 
@@ -401,11 +430,17 @@ public class CentralServer extends SimpleAgent {
 		}
 	}
 
-	public void moor() {
-		for (Ship s : listShips) {
+	public void checkMoor() {
+		if (listShips.size() == 0) {
+			return;
+		}
+		Iterator<Ship> iterator = listShips.iterator();
+		while (iterator.hasNext()) {
+			Ship s = iterator.next();
 			if (s.getPosition().getX() >= mapCreator.getDestiny().getX()) {
+				iterator.remove();
 				s.moor();
-				listShips.remove(s);
+				System.out.println("Current number: " + listShips.size());
 			}
 		}
 	}

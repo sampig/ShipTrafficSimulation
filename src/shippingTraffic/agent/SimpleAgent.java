@@ -99,7 +99,7 @@ public class SimpleAgent {
 
 	public void changeHeading(double heading) {
 		this.heading += heading;
-		this.heading = this.heading % 360;
+		this.heading = (this.heading + 360) % 360;
 	}
 
 	/**
