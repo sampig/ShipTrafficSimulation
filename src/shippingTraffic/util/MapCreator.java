@@ -32,7 +32,8 @@ public class MapCreator {
 	}
 
 	/**
-	 * Create a simple and straight river. Store all the nodes of water.
+	 * Create a simple and straight river. Store all the nodes of the water. THe
+	 * width of the river is SIZE_Y * 0.4.
 	 */
 	public void createSimpleStraightRiver() {
 		GridNode node = new GridNode();
@@ -118,14 +119,19 @@ public class MapCreator {
 		Random r = new Random();
 		this.clearStartNodes();
 		if (type == SimulationKind.SIMPLE_COLLISION_2) {
+			// for the simple collision 2
 			this.setStartNodesCollision();
 		} else if (type == SimulationKind.OCEAN_TO_RIVER_2) {
+			// for the entrance without avoidance of collision
 			this.addStartNode(new GridNode(START_PADDING_X, 25, 0));
 			this.addStartNode(new GridNode(START_PADDING_X, 150, 0));
 		} else if (type == SimulationKind.OCEAN_TO_RIVER_3) {
+			// for the advanced entrance
 			this.addStartNode(new GridNode(START_PADDING_X, 25, r.nextInt(45))); // 0~45
 			this.addStartNode(new GridNode(START_PADDING_X, 150, 0 - r
 					.nextInt(45))); // -45~0
+		} else if (type == SimulationKind.OCEAN_TO_RIVER_4) {
+			this.setStartNodesAdvanced2();
 		}
 	}
 
@@ -138,6 +144,14 @@ public class MapCreator {
 		node = new GridNode(START_PADDING_X, SIZE_Y / 2 - 1, 0);
 		startNodes.add(node);
 		node = new GridNode(SIZE_X - START_PADDING_X, SIZE_Y / 2 - 1, 180);
+		startNodes.add(node);
+	}
+
+	public void setStartNodesAdvanced2() {
+		this.clearStartNodes();
+		GridNode node = new GridNode(START_PADDING_X, 31, 7);
+		startNodes.add(node);
+		node = new GridNode(START_PADDING_X, 151, -21);
 		startNodes.add(node);
 	}
 

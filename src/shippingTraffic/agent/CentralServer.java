@@ -97,6 +97,9 @@ public class CentralServer extends SimpleAgent {
 		case SimulationKind.OCEAN_TO_RIVER_3:
 			this.preOceanSim(2);
 			break;
+		case SimulationKind.OCEAN_TO_RIVER_4:
+			this.preOceanSim(3);
+			break;
 		default:
 			break;
 		}
@@ -150,13 +153,16 @@ public class CentralServer extends SimpleAgent {
 		// only if it is the simple collision simulation, server will not check
 		// the collision.
 		switch (simulationKind) {
+		case SimulationKind.OCEAN_TO_RIVER_4:
+			this.arrangeEntrance();
 		case SimulationKind.OCEAN_TO_RIVER_3:
 		case SimulationKind.OCEAN_TO_RIVER_2:
 			this.checkLand();
 			this.checkMoor();
 		case SimulationKind.AVOIDANCE_COLLISION:
 		case SimulationKind.HITTING_LANDS:
-			if (simulationKind != SimulationKind.OCEAN_TO_RIVER_2) {
+			if (simulationKind != SimulationKind.OCEAN_TO_RIVER_2
+					&& simulationKind != SimulationKind.OCEAN_TO_RIVER_4) {
 				this.checkCollision();
 			}
 		case SimulationKind.SIMPLE_COLLISION:
@@ -270,6 +276,9 @@ public class CentralServer extends SimpleAgent {
 	 * Check the collision.
 	 */
 	public void checkCollision() {
+		if (listShips.size() <= 1) {
+			return;
+		}
 		for (int i = 0; i < listShips.size(); i++) {
 			Ship s1 = listShips.get(i);
 			for (int j = i + 1; j < listShips.size(); j++) {
@@ -282,10 +291,15 @@ public class CentralServer extends SimpleAgent {
 						s2.getPosition());
 				if (d < s1.getSafeDistance() + s2.getSafeDistance()) {
 					// if two ships move away from each other, it is safe.
-					if (MathUtil.checkSafeDistance(s1.getPreviousPosition(),
-							s1.getPosition(), s2.getPreviousPosition(),
-							s2.getPosition())) {
+					int flag = MathUtil.checkSafeDistance(
+							s1.getPreviousPosition(), s1.getPosition(),
+							s2.getPreviousPosition(), s2.getPosition());
+					if (flag > 0) {
 						continue;
+					} else if (flag == 0) {
+						if (s1.getSpeed() == s2.getSpeed()) {
+							s1.changeSpeed(true);
+						}
 					}
 					this.changeDirection(s1, s2);
 				}
@@ -345,7 +359,6 @@ public class CentralServer extends SimpleAgent {
 						/ Math.tan(Math.toRadians(-s.getHeading() + turn));
 				if (s.getPosition().getX() >= dx - sd) {
 					s.changeDirection(-turn);
-					System.out.println("Turning: " + (-turn));
 				}
 			}
 		}
@@ -366,17 +379,38 @@ public class CentralServer extends SimpleAgent {
 	public void arrangeEntrance() {
 		for (int i = 0; i < listShips.size(); i++) {
 			Ship s1 = listShips.get(i);
+			if (s1.getPosition().getX() >= mapCreator.getLineX1()) {
+				continue;
+			}
 			for (int j = i + 1; j < listShips.size(); j++) {
 				Ship s2 = listShips.get(j);
 				if (possibleAccident(s1, s2)) {
-					this.changeDirection(s1, s2);
+					s1.changeSpeed(true);
 				}
 			}
 		}
 	}
 
 	public boolean possibleAccident(Ship s1, Ship s2) {
-		return true;
+		double sp1 = s1.getSpeed();
+		double sp2 = s2.getSpeed();
+		double d1 = Math.sqrt((240 - s1.getPosition().getX())
+				* (240 - s1.getPosition().getX())
+				+ (60 - s1.getPosition().getY())
+				* (60 - s1.getPosition().getY()));
+		double d2 = Math.sqrt((240 - s2.getPosition().getX())
+				* (240 - s2.getPosition().getX())
+				+ (60 - s2.getPosition().getY())
+				* (60 - s2.getPosition().getY()));
+		double t1 = d1 / sp1;
+		double t2 = d2 / sp2;
+		if (t1 > 100 || t2 > 100) {
+			return false;
+		}
+		if (Math.abs(t1 - t2) <= 20) {
+			return true;
+		}
+		return false;
 	}
 
 	/**
@@ -399,6 +433,7 @@ public class CentralServer extends SimpleAgent {
 				if (MathUtil
 						.chooseDirection(s1.getPosition(), s2.getPosition())) {
 					turn = -turn;
+					// System.out.println(s1.toString() + " turn Right.");
 				}
 				s1.changeDirection(turn, s2);
 			}
@@ -408,6 +443,7 @@ public class CentralServer extends SimpleAgent {
 				if (MathUtil
 						.chooseDirection(s2.getPosition(), s1.getPosition())) {
 					turn = -turn;
+					// System.out.println(s2.toString() + " turn Right.");
 				}
 				s2.changeDirection(turn, s1);
 			}

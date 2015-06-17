@@ -57,12 +57,12 @@ public class MathUtil {
 	 *            previous point of ship2
 	 * @param n4
 	 *            current point of ship2
-	 * @return
+	 * @return positive(safe), negative(dangerous), 0(no change)
 	 */
-	public static boolean checkSafeDistance(GridNode n1, GridNode n2,
-			GridNode n3, GridNode n4) {
+	public static int checkSafeDistance(GridNode n1, GridNode n2, GridNode n3,
+			GridNode n4) {
 		if (n1 == null || n2 == null || n3 == null | n4 == null) {
-			return true;
+			return 1;
 		}
 		int x1 = n1.getX();
 		int y1 = n1.getY();
@@ -77,9 +77,11 @@ public class MathUtil {
 		// current distance
 		double l24 = Math.sqrt((x4 - x2) * (x4 - x2) + (y4 - y2) * (y4 - y2));
 		if (l24 > l13) {
-			return true;
+			return 1;
+		} else if (l24 == l13) {
+			return 0;
 		}
-		return false;
+		return -1;
 	}
 
 	/**
@@ -204,11 +206,15 @@ public class MathUtil {
 	 */
 	public static boolean chooseDirection(GridNode n1, GridNode n2) {
 		int d = n1.getDirection();
-		double d2 = Math.toDegrees(Math.atan2((n2.getY() - n1.getY())
-				, (n2.getX() - n1.getX())));
-		if(d2>d) {
+		double d2 = Math.toDegrees(Math.atan2((n2.getY() - n1.getY()),
+				(n2.getX() - n1.getX())));
+		if (d2 > d) {
+			// System.out.println("RIGHT---d: " + d + ", d2: " + d2 + ", " + n1
+			// + ", " + n2);
 			return true;
 		}
+		// System.out.println("LEFT---d: " + d + ", d2: " + d2 + ", " + n1 +
+		// ", " + n2);
 		return false;
 	}
 

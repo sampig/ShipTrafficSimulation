@@ -11,7 +11,7 @@
 
 	<!-- Examples -->
 	<parameter name="simulationKind" displayName="Kind of Simulation"
-		type="int" defaultValue="40" isReadOnly="false"
+		type="int" defaultValue="51" isReadOnly="false"
 		converter="repast.simphony.parameter.StringConverterFactory$IntConverter" />
 
 	<!-- Probability for the weather change -->

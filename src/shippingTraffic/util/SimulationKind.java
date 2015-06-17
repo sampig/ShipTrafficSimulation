@@ -39,6 +39,12 @@ public class SimulationKind {
 	public final static int OCEAN_TO_RIVER_3 = 50;
 
 	/**
+	 * Ships start with fixed directions towards the same point from ocean to
+	 * river.
+	 */
+	public final static int OCEAN_TO_RIVER_4 = 51;
+
+	/**
 	 * Check whether the simulation needs to detect the collision.
 	 * 
 	 * @param kind
@@ -73,6 +79,9 @@ public class SimulationKind {
 			break;
 		case OCEAN_TO_RIVER_3:
 			str = "Advanced into River";
+			break;
+		case OCEAN_TO_RIVER_4:
+			str = "Advanced into River 2";
 			break;
 		default:
 			break;

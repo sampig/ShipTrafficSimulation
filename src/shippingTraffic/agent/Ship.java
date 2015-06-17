@@ -39,10 +39,14 @@ public class Ship extends SimpleAgent {
 	private GridNode nextPos = new GridNode();
 
 	//
-	private List<int[]> changeCount = new ArrayList<>(0);
-	public final static int CHANGE_COUNT = 10;
+	private List<int[]> changeDirectionCount = new ArrayList<>(0);
+	public final static int CHANGE_DIRECTION_COUNT = 10;
 	private List<double[]> changeDirection = new ArrayList<>(0);
 	private List<String> listID = new ArrayList<>(0);
+
+	//
+	private int slowCount = 0;
+	public final static int SLOW_SPEED_COUNT = 10;
 
 	//
 	private CentralServer server;
@@ -112,6 +116,7 @@ public class Ship extends SimpleAgent {
 		// System.out.println("Ship(" + getID() + "): (" + x + "," + y + ")");
 		position.setX(x);
 		position.setY(y);
+		position.setDirection((int) this.getHeading());
 
 		Water water = null;
 		Ship anotherShip = null;
@@ -135,9 +140,9 @@ public class Ship extends SimpleAgent {
 		}
 
 		//
-		if (changeCount.size() > 0) {
-			for (int i = 0; i < changeCount.size(); i++) {
-				int[] cc = changeCount.get(i);
+		if (changeDirectionCount.size() > 0) {
+			for (int i = 0; i < changeDirectionCount.size(); i++) {
+				int[] cc = changeDirectionCount.get(i);
 				double[] cd = changeDirection.get(i);
 				if (cc.length < 3) {
 					continue;
@@ -158,11 +163,19 @@ public class Ship extends SimpleAgent {
 					}
 					cc[2]--;
 				} else {
-					changeCount.remove(cc);
+					changeDirectionCount.remove(cc);
 					changeDirection.remove(cd);
 					listID.remove(i);
 				}
 			}
+		}
+
+		// resume the speed.
+		if (slowCount > 0) {
+			if (slowCount == 1) {
+				this.setSpeed(type.getMaxSpeed());
+			}
+			slowCount--;
 		}
 	}
 
@@ -208,8 +221,8 @@ public class Ship extends SimpleAgent {
 	}
 
 	public void collision(Ship anotherShip) {
-		System.out.println("Ship(" + this.getID() + ") and Ship("
-				+ anotherShip.getID() + ") have a Collision.");
+		System.out.println("Ship(" + this.toString() + ") and Ship("
+				+ anotherShip.toString() + ") have a Collision.");
 		anotherShip.destroyed();
 		this.destroyed();
 	}
@@ -255,18 +268,38 @@ public class Ship extends SimpleAgent {
 		}
 		double angle = Math.abs(this.getHeading() - another.getHeading());
 		if (angle < 90 || angle > 270) {
-			if (this.getSpeed() == another.getSpeed()) {
+			double diff = this.getSpeed() - another.getSpeed();
+			if (diff < 0.0001) {
 				m2 = 8;
 			} else {
-				m2 = 4 / (int) Math.abs(this.getSpeed() - another.getSpeed());
+				m2 = 4 / (int) Math.abs(diff);
 			}
 		}
-		int[] cc = { CHANGE_COUNT * m, CHANGE_COUNT * m2, CHANGE_COUNT * m };
-		changeCount.add(cc);
+		int[] cc = { CHANGE_DIRECTION_COUNT * m, CHANGE_DIRECTION_COUNT * m2,
+				CHANGE_DIRECTION_COUNT * m };
+		changeDirectionCount.add(cc);
 		double[] cd = { -direction, -direction, direction };
 		changeDirection.add(cd);
 		listID.add(another.getID());
 		this.changeDirection(direction);
+	}
+
+	/**
+	 * Change ship's Speed.
+	 * 
+	 * @param slow
+	 *            slow down if true; speed up if false.
+	 */
+	public void changeSpeed(boolean slow) {
+		if (slowCount > 0) {
+			return;
+		}
+		if (slow) {
+			this.setSpeed(this.getSpeed() / 2);
+			slowCount = SLOW_SPEED_COUNT;
+		} else {
+			;
+		}
 	}
 
 	/**
@@ -335,12 +368,22 @@ public class Ship extends SimpleAgent {
 		return super.getSpeed();
 	}
 
+	/**
+	 * Get the normal safe distance.
+	 * 
+	 * @return
+	 */
 	public double getSafeDistance() {
 		double sd = 0;
 		sd = type.getSafeDistance();
 		return sd;
 	}
 
+	/**
+	 * Get the safe distance for land.
+	 * 
+	 * @return
+	 */
 	public double getLandSafeDistance() {
 		double sd = 0;
 		sd = type.getSafeDistance() / 2;
